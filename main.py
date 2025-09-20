@@ -15,4 +15,4 @@ app.add_middleware(
 
 @app.get("/")
 async def read_root():
-    return {"message": "Hello, world! This is my Render back-end."}
+    return {"message": "Hello, world! This is my Render back-end. Added CORS middleware."}
