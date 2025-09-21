@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Backend Demo</title></head>
+<body>
+  <h1>Backend Message</h1>
+  <pre id="output">Loading...</pre>
+  <script>
+    fetch("https://backend-demo-9q0i.onrender.com/")
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('output').innerText = data.message;
+      })
+      .catch(err => {
+        document.getElementById('output').innerText = "Error: " + err;
+      });
+  </script>
+</body>
+</html>
