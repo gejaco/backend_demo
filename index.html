@@ -1,18 +1,98 @@
 <!DOCTYPE html>
-<html>
-<head><title>Backend Demo</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Deepgram Proxy Front End</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 3em; }
+    #transcript { margin-top: 1.5em; padding: 1em; border: 1px solid #ddd; background: #fefefe; min-height: 150px; white-space: pre-wrap; }
+    button { padding: 0.8em 1.5em; font-size: 1rem; }
+  </style>
+</head>
 <body>
-  <h1>Backend Message</h1>
-  <pre id="output">Loading...</pre>
+  <h1>Deepgram Proxy Microphone Streaming Test</h1>
+  <button id="startBtn">Start Transcription</button>
+  <button id="stopBtn" disabled>Stop Transcription</button>
+  <div id="transcript">Transcript will appear here...</div>
+
   <script>
-    fetch("https://backend-demo-9q0i.onrender.com/")
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('output').innerText = data.message;
-      })
-      .catch(err => {
-        document.getElementById('output').innerText = "Error: " + err;
-      });
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const transcriptDiv = document.getElementById('transcript');
+
+    let ws;
+    let mediaRecorder;
+
+    function logTranscript(text) {
+      transcriptDiv.textContent = text;
+    }
+
+    startBtn.onclick = async () => {
+      startBtn.disabled = true;
+      transcriptDiv.textContent = "Requesting microphone access...";
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        transcriptDiv.textContent = "Microphone access granted. Connecting to backend...";
+        //ws = new WebSocket(`wss://${window.location.host}/ws/deepgram`);
+        ws = new WebSocket(`ws://localhost:8000/ws/deepgram`);
+
+        ws.onopen = () => {
+          transcriptDiv.textContent = "Connected to backend. Starting recording...";
+          mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+          mediaRecorder.start(250);  // Emit audio data every 250 ms
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+              ws.send(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.close();
+            }
+          };
+
+          stopBtn.disabled = false;
+          startBtn.disabled = true;
+        };
+
+        ws.onmessage = (msgEvent) => {
+          try {
+            console.log("Received message from backend:", msgEvent.data);
+            const dgResponse = JSON.parse(msgEvent.data);
+            const text = dgResponse.channel?.alternatives[0]?.transcript || "";
+            if (text.trim() !== "") {
+              logTranscript(text);
+            }
+          } catch (err) {
+            console.error("Error parsing Deepgram response", err);
+          }
+        };
+
+        ws.onerror = (err) => {
+          transcriptDiv.textContent = "WebSocket error. Check console.";
+          console.error("WebSocket error:", err);
+        };
+
+        ws.onclose = () => {
+          transcriptDiv.textContent += "\nConnection closed.";
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        };
+      } catch (err) {
+        transcriptDiv.textContent = `Microphone error: ${err.name} - ${err.message}`;
+        startBtn.disabled = false;
+      }
+    };
+
+    stopBtn.onclick = () => {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      stopBtn.disabled = true;
+      startBtn.disabled = false;
+    };
   </script>
 </body>
 </html>
