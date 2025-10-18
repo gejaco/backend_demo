@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import websockets
 import asyncio
 import os
+import json
 
 app = FastAPI()
 #DEEPGRAM_API_KEY = os.environ.get("11511bdebd666816f3575dfa0e2d8031ccdbc605")  # Store your key as an environment variable
@@ -31,7 +32,14 @@ async def proxy_to_deepgram(websocket: WebSocket):
             async def from_deepgram_to_client():
                 try:
                     async for dg_data in dg_socket:
-                        print("Raw Deepgram data:", dg_data)
+                        try:
+                            packet = json.loads(dg_data)
+                            transcript = packet.get("channel", {}).get("alternatives", [{}])[0].get("transcript", "")
+                            if transcript:
+                                print(transcript)
+                        except Exception as e:
+                            print("Error extracting transcript:", e)
+
                         await websocket.send_text(dg_data)
                 except Exception as e:
                     print("Deepgram->Client error:", e)

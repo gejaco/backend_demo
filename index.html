@@ -1,30 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Deepgram Proxy Front End</title>
+  <meta charset="UTF-8">
+  <title>TherAssist Scribe | Session Transcription Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; margin: 3em; }
-    #transcript { margin-top: 1.5em; padding: 1em; border: 1px solid #ddd; background: #fefefe; min-height: 150px; white-space: pre-wrap; }
-    button { padding: 0.8em 1.5em; font-size: 1rem; }
+    body {
+      background: #f8fafd;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      color: #27344b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      background: #567ad6;
+      width: 100%;
+      padding: 2em 0 1.2em 0;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(86,122,214,0.09);
+      margin-bottom: 1em;
+    }
+    h1 {
+      margin: 0;
+      font-weight: 600;
+      color: #fff;
+      font-size: 2.6rem;
+      letter-spacing: 1.5px;
+    }
+    h2 {
+      color: #d3e0f7;
+      font-size: 1.05rem;
+      margin-top: 0.3em;
+      font-weight: 400;
+      letter-spacing: 0.2px;
+    }
+    main {
+      background: #fff;
+      border-radius: 12px;
+      width: 95%;
+      max-width: 800px;
+      box-shadow: 0 2px 16px rgba(40,60,90,0.08);
+      padding: 2em 2em 1.2em 2em;
+      margin-bottom: 2em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .transcript-container {
+      width: 98%;
+      margin-top: 1.3em;
+      margin-bottom: 1.2em;
+      background: #f0f4fa;
+      border-radius: 10px;
+      border: 1.5px solid #dde3ec;
+      min-height: 240px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 1.2em;
+      font-size: 1.18rem;
+      line-height: 1.6;
+      color: #295170;
+      box-shadow: 0 1px 9px rgba(54,68,89,0.04);
+      white-space: pre-wrap;
+    }
+    .instructions {
+      font-size: 1em;
+      color: #7287a6;
+      margin-bottom: 1.1em;
+      text-align: center;
+    }
+    .btn-bar {
+      display: flex;
+      gap: 1.2em;
+      margin-bottom: 0.3em;
+    }
+    button {
+      background: #567ad6;
+      color: #fff;
+      font-size: 1rem;
+      padding: 0.75em 2.1em;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.16s;
+      box-shadow: 0 2px 6px rgba(54,122,214,0.07);
+    }
+    button:disabled {
+      background: #b4c9f7;
+      cursor: not-allowed;
+    }
+    footer {
+      width: 100%;
+      text-align: center;
+      font-size: 0.97rem;
+      color: #a5aac6;
+      padding: 0.8em 0;
+      margin-top: auto;
+    }
+    .branding {
+      font-weight: 700;
+      color: #567ad6;
+      letter-spacing: 0.2px;
+      font-size: 1.06em;
+    }
   </style>
 </head>
 <body>
-  <h1>Deepgram Proxy Microphone Streaming Test</h1>
-  <button id="startBtn">Start Transcription</button>
-  <button id="stopBtn" disabled>Stop Transcription</button>
-  <div id="transcript">Transcript will appear here...</div>
-
+  <header>
+    <h1>TherAssist Scribe</h1>
+    <h2>Your trusted scribe for psychological sessions</h2>
+  </header>
+  <main>
+    <div class="instructions">Click <b>Start Transcription</b> to record and transcribe session dialogue. All captured text will appear live below.</div>
+    <div class="btn-bar">
+      <button id="startBtn">Start Transcription</button>
+      <button id="stopBtn" disabled>Stop Transcription</button>
+    </div>
+    <div class="transcript-container" id="transcript">
+      Transcript will appear here...
+    </div>
+  </main>
+  <footer>
+    Powered by <span class="branding">TherAssist Scribe</span>
+  </footer>
   <script>
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const transcriptDiv = document.getElementById('transcript');
-
     let ws;
     let mediaRecorder;
+    let transcriptAccum = "";
 
-    function logTranscript(text) {
-      transcriptDiv.textContent = text;
+    function appendTranscript(text) {
+      if (!text) return;
+      transcriptAccum += text + " ";
+      transcriptDiv.textContent = transcriptAccum.trim();
     }
 
     startBtn.onclick = async () => {
@@ -32,67 +146,64 @@
       transcriptDiv.textContent = "Requesting microphone access...";
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        transcriptDiv.textContent = "Microphone access granted. Connecting to backend...";
-        //ws = new WebSocket(`wss://${window.location.host}/ws/deepgram`);
-        ws = new WebSocket(`ws://localhost:8000/ws/deepgram`);
+        transcriptDiv.textContent = "Microphone granted. Connecting securely to TherAssist Scribe...";
+        //ws = new WebSocket(`ws://${window.location.hostname}:8000/ws/deepgram`);
+        ws = new WebSocket(`ws://localhost:8000/ws/deepgram`);        
+        ws.binaryType = "arraybuffer";
 
-        ws.onopen = () => {
-          transcriptDiv.textContent = "Connected to backend. Starting recording...";
-          mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-          mediaRecorder.start(250);  // Emit audio data every 250 ms
+        ws.onopen = async () => {
+          transcriptDiv.textContent = "Session started. Listening...";
+          stopBtn.disabled = false;
+          transcriptAccum = "";
 
-          mediaRecorder.ondataavailable = (event) => {
+          mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+          mediaRecorder.ondataavailable = event => {
             if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
               ws.send(event.data);
             }
           };
-
-          mediaRecorder.onstop = () => {
-            if (ws.readyState === WebSocket.OPEN) {
-              ws.close();
-            }
-          };
-
-          stopBtn.disabled = false;
-          startBtn.disabled = true;
+          mediaRecorder.start(250);
         };
 
-        ws.onmessage = (msgEvent) => {
+        ws.onmessage = ({ data }) => {
+          // Assume Deepgram sends JSON with a transcript
           try {
-            console.log("Received message from backend:", msgEvent.data);
-            const dgResponse = JSON.parse(msgEvent.data);
-            const text = dgResponse.channel?.alternatives[0]?.transcript || "";
-            if (text.trim() !== "") {
-              logTranscript(text);
+            const packet = JSON.parse(data);
+            const alternatives = packet.channel?.alternatives;
+            if (alternatives && alternatives[0]?.transcript) {
+              appendTranscript(alternatives[0].transcript);
             }
-          } catch (err) {
-            console.error("Error parsing Deepgram response", err);
-          }
-        };
-
-        ws.onerror = (err) => {
-          transcriptDiv.textContent = "WebSocket error. Check console.";
-          console.error("WebSocket error:", err);
+          } catch {}
         };
 
         ws.onclose = () => {
-          transcriptDiv.textContent += "\nConnection closed.";
-          startBtn.disabled = false;
+          transcriptDiv.textContent += "\n--- Session ended ---";
           stopBtn.disabled = true;
+          startBtn.disabled = false;
         };
+
+        ws.onerror = err => {
+          transcriptDiv.textContent = "Connection error with TherAssist Scribe.";
+          console.error(err);
+          stopBtn.disabled = true;
+          startBtn.disabled = false;
+        };
+
       } catch (err) {
-        transcriptDiv.textContent = `Microphone error: ${err.name} - ${err.message}`;
+        transcriptDiv.textContent = "Microphone access denied or not available.";
         startBtn.disabled = false;
+        console.error("Media access error:", err);
       }
     };
 
     stopBtn.onclick = () => {
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-      }
       stopBtn.disabled = true;
       startBtn.disabled = false;
+      if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+      if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+      transcriptDiv.textContent += "\n--- Scribe paused ---";
     };
+
   </script>
 </body>
 </html>
