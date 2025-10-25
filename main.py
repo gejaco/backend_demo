@@ -7,6 +7,11 @@ import json
 app = FastAPI()
 #DEEPGRAM_API_KEY = os.environ.get("11511bdebd666816f3575dfa0e2d8031ccdbc605")  # Store your key as an environment variable
 DEEPGRAM_API_KEY = "11511bdebd666816f3575dfa0e2d8031ccdbc605"
+DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
+
+if not DEEPGRAM_API_KEY:
+    raise RuntimeError("Deepgram API key not set in environment variable DEEPGRAM_API_KEY")
+
 DEEPGRAM_WS_URL = "wss://api.deepgram.com/v1/listen?punctuate=true"
 
 @app.websocket("/ws/deepgram")
