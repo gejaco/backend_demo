@@ -149,10 +149,20 @@
         transcriptDiv.textContent = "Microphone granted. Connecting securely to TherAssist Scribe...";
         //ws = new WebSocket(`ws://${window.location.hostname}:8000/ws/deepgram`);
         //ws = new WebSocket(`ws://localhost:8000/ws/deepgram`);  
-        const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-        const backendHost = window.location.hostname;
-        const backendPort = 8000;  // backend uvicorn port
-        const wsUrl = `${wsProtocol}${backendHost}:${backendPort}/ws/deepgram`;
+        // const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        // const backendHost = window.location.hostname;
+        // const backendPort = 8000;  // backend uvicorn port
+        // const wsUrl = `${wsProtocol}${backendHost}:${backendPort}/ws/deepgram`;
+
+        // Determine WebSocket URL based on environment
+        let wsUrl;
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            // Local development
+            wsUrl = "ws://localhost:8000/ws/deepgram";
+        } else {
+            // Production on Render
+            wsUrl = "wss://therassist.onrender.com/ws/deepgram";  // Replace with YOUR backend URL
+        }
 
         const ws = new WebSocket(wsUrl);
 
