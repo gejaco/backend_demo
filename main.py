@@ -6,7 +6,7 @@ import json
 
 app = FastAPI()
 #DEEPGRAM_API_KEY = os.environ.get("11511bdebd666816f3575dfa0e2d8031ccdbc605")  # Store your key as an environment variable
-DEEPGRAM_API_KEY = "11511bdebd666816f3575dfa0e2d8031ccdbc605"
+
 DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
 
 if not DEEPGRAM_API_KEY:
@@ -27,7 +27,8 @@ async def proxy_to_deepgram(websocket: WebSocket):
             async def from_client_to_deepgram():
                 try:
                     while True:
-                        data = await websocket.receive_bytes()                        
+                        data = await websocket.receive_bytes() 
+                        print('Received', len(data), 'bytes from client')                       
                         await dg_socket.send(data)
                 except WebSocketDisconnect:
                     await dg_socket.close()
