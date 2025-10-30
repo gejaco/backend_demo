@@ -171,14 +171,16 @@
 
         ws.onopen = async () => {
           transcriptDiv.textContent = "Session started. Listening...";
+          // Send 1 byte of silence to keep WebSocket alive
+          ws.send(new Uint8Array([0]));
           stopBtn.disabled = false;
           transcriptAccum = "";
 
           mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
           mediaRecorder.ondataavailable = event => {
-            if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+            //if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
               ws.send(event.data);
-            }
+            //}
           };
           mediaRecorder.start(250);
         };
