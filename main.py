@@ -30,10 +30,13 @@ async def proxy_to_deepgram(websocket: WebSocket):
                         data = await websocket.receive_bytes() 
                         print('Received', len(data), 'bytes from client')                       
                         await dg_socket.send(data)
-                except WebSocketDisconnect:
+                except WebSocketDisconnect as e:
+                    # This prints details about the disconnect event
+                    print(f"WebSocketDisconnect: code={e.code}, reason={getattr(e, 'reason', None)}")
                     await dg_socket.close()
                 except Exception as e:
                     print("Client->Deepgram error:", e)
+                    await dg_socket.close()
 
             async def from_deepgram_to_client():
                 try:
