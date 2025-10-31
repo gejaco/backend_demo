@@ -3,10 +3,14 @@ import websockets
 import asyncio
 import os
 import json
+import logging
+
+print("Startup message")
 
 app = FastAPI()
+logger = logging.getLogger("uvicorn.error")
 #DEEPGRAM_API_KEY = os.environ.get("11511bdebd666816f3575dfa0e2d8031ccdbc605")  # Store your key as an environment variable
-
+logger.info("logger Message here")
 DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
 
 if not DEEPGRAM_API_KEY:
@@ -25,10 +29,13 @@ async def proxy_to_deepgram(websocket: WebSocket):
             }
         ) as dg_socket:
             async def from_client_to_deepgram():
+                print("WebSocket: entering receive loop")
+                logger.info("logger WebSocket: entering receive loop")
                 try:
                     while True:
                         data = await websocket.receive_bytes() 
                         print('Received', len(data), 'bytes from client')                       
+                        logger.info('logger Received bytes from client')                       
                         await dg_socket.send(data)
                 except WebSocketDisconnect as e:
                     # This prints details about the disconnect event
