@@ -20,6 +20,7 @@ DEEPGRAM_WS_URL = "wss://api.deepgram.com/v1/listen?punctuate=true"
 
 @app.websocket("/ws/deepgram")
 async def proxy_to_deepgram(websocket: WebSocket):
+    logger.info("WebSocket endpoint called")
     await websocket.accept()
     try:
         async with websockets.connect(
