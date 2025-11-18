@@ -23,6 +23,8 @@ async def proxy_to_deepgram(websocket: WebSocket):
     logger.info("WebSocket endpoint called")
     await websocket.accept()
     try:
+        print("try websockets.connect")
+        logger.info("try websockets.connect")
         async with websockets.connect(
             DEEPGRAM_WS_URL,
             extra_headers ={
@@ -41,6 +43,7 @@ async def proxy_to_deepgram(websocket: WebSocket):
                 except WebSocketDisconnect as e:
                     # This prints details about the disconnect event
                     print(f"WebSocketDisconnect: code={e.code}, reason={getattr(e, 'reason', None)}")
+                    logger.info(f"WebSocketDisconnect: code={e.code}, reason={getattr(e, 'reason', None)}")
                     await dg_socket.close()
                 except Exception as e:
                     print("Client->Deepgram error:", e)
