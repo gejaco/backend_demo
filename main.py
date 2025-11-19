@@ -47,6 +47,7 @@ async def proxy_to_deepgram(websocket: WebSocket):
                     await dg_socket.close()
                 except Exception as e:
                     print("Client->Deepgram error:", e)
+                    logger.error("Client->Deepgram error:", e)
                     await dg_socket.close()
 
             async def from_deepgram_to_client():
@@ -69,6 +70,7 @@ async def proxy_to_deepgram(websocket: WebSocket):
 
     except Exception as e:
         print("Proxy error:", e)
+        logger.error(f"Error in websockets.connect: {repr(e)}")
         await websocket.close()
 
 @app.get("/")
