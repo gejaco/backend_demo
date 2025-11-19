@@ -27,7 +27,7 @@ async def proxy_to_deepgram(websocket: WebSocket):
         logger.info("try websockets.connect")
         async with websockets.connect(
             DEEPGRAM_WS_URL,
-            extra_headers ={
+            headers ={
                 "Authorization": f"Token {DEEPGRAM_API_KEY}"
             }
         ) as dg_socket:
